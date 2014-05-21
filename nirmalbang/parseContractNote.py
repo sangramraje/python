@@ -2,6 +2,7 @@
 
 from HTMLParser import HTMLParser
 import json
+import argparse
 
 global trade_date
 global trade_date_next
@@ -78,14 +79,10 @@ class MyHTMLParser(HTMLParser):
   def handle_endtag(self, tag):
     global order_info_start
     global order_info_start_row
-    global complete_file_data
     if order_info_start and tag.startswith('table'):
       #print "Encountered an end tag :", tag
       order_info_start = False
       order_info_start_row = False
-      json_line = json.dumps(complete_file_data, sort_keys = True, indent = 4, separators = (',', ': '))
-      #print "Complete Data"
-      print json_line
     #if 0:
     #  print "Encountered an end tag :", tag
 
@@ -167,6 +164,30 @@ def callParser(filename):
   trades_details = []
   summary_map = {}
   parser.feed(entire_file)
+  json_line = json.dumps(complete_file_data, sort_keys = True, indent = 4, separators = (',', ': '))
+  #print "Complete Data"
+  print json_line
 
-def print_data() :
+def print_data():
   print str(trade_date)
+
+def main():
+  global complete_file_data
+
+  parser = argparse.ArgumentParser(description='Extract information from HTML contract note into a JSON file')
+  parser.add_argument('html_file', metavar='f', type=str, help='HTML filename')
+  parser.add_argument('json_file', metavar='o', type=str, help='JSON filename')
+  args = parser.parse_args()
+
+  import os.path
+  html_file = os.path.realpath(args.html_file)
+  json_file = os.path.realpath(args.json_file)
+
+  callParser(html_file)
+  output_file = open(json_file, 'w')
+  json.dump(complete_file_data, output_file, sort_keys = True, indent = 4, separators = (',', ': '))
+#  json.dump(complete_file_data, output_file)
+  output_file.close()
+
+if __name__ == "__main__":
+      main()
